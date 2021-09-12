@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+    <body>
+        <h1>Data Covid 19 Indonesia</h1>
+        <div id="container"></div>
+
+        <script>
+            function loadData(){
+                fetch('https://indonesia-covid-19.mathdro.id/api/provinsi')
+                .then(function (response) {
+                    // API Success
+                    if (response.ok) return response.json();
+                    // API Failed
+                    else return Promise.reject(response);
+                }).then(function (resp) {
+                    // JSON Response
+                    let dataCovid = resp.data
+                    dataCovid = dataCovid.filter(e => e.provinsi != "Indonesia").map(e => { 
+                        return {
+                            Provinsi: e.provinsi, Positif: e.kasusPosi, Sembuh: e.kasusSemb, Meninggal: e.kasusMeni 
+                        }
+                    })
+                    let jumlahPositif = dataCovid.reduce((total, curr) => total + curr.Positif, 0)
+                    let jumlahSembuh = dataCovid.reduce((total, curr) => total + curr.Sembuh, 0)
+                    let jumlahMeninggal = dataCovid.reduce((total, curr) => total + curr.Meninggal, 0)
+
+                    generateParagraph(`Positif: ${jumlahPositif}`)
+                    generateParagraph(`Sembuh: ${jumlahSembuh}`)
+                    generateParagraph(`Meninggal: ${jumlahMeninggal}`)
+                    generateTable(dataCovid);
+                }).catch(function (err) {
+                    // There was an error
+                    generateParagraph(`Maaf terjadi gangguan. Coba refresh kembali dalam beberapa saat`)
+                    console.warn('Maaf terjadi gangguan :', err);
+                });
+            }
+
+            function generateParagraph(text) {
+                let p = document.createElement('p');
+                p.innerText = text;
+                document.getElementById('container').appendChild(p);
+            }
+
+            function generateTable(data) {
+                var table = document.createElement('table');
+                table.style.border = "1px solid black";
+                for( var i = 0; i < data.length; i++ ) {
+                    var rowData = data[i];
+                    if(i === 0 ) addHeaders(table, Object.keys(rowData));
+                    var row = table.insertRow();
+                    Object.keys(rowData).forEach(function(k) {
+                        var cell = row.insertCell();
+                        cell.appendChild(document.createTextNode(rowData[k]));
+                    })
+                }
+                document.getElementById('container').appendChild(table);
+            }
+
+            function addHeaders(table, keys) {
+                var row = table.insertRow();
+                for( var i = 0; i < keys.length; i++ ) {
+                    var cell = row.insertCell();
+                    cell.appendChild(document.createTextNode(keys[i]));
+                }
+            }
+
+            loadData()
+        </script>
+    </body>
+</html>
